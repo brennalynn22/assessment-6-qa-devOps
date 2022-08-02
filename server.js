@@ -4,13 +4,29 @@ const app = express()
 const {bots, playerRecord} = require('./data')
 const {shuffleArray} = require('./utils')
 
+// include and initialize the rollbar library with your access token
+var Rollbar = require('rollbar')
+var rollbar = new Rollbar({
+  accessToken: 'e423f446bfc445b0b2e4836dc41eaa9a',
+  captureUncaught: true,
+  captureUnhandledRejections: true,
+})
+
+// record a generic message and send it to Rollbar
+rollbar.log('Hello world!')
+
 app.use(express.json())
 app.use(express.static('public'))
 //app.use('/static', express.static(path.join(__dirname, 'public')))
 //Why didn't the above request work?
 
+app.get('/', function(req, res){
+    res.sendFile(path.join(__dirname, '../index.html'))
+})
+
 app.get('/api/robots', (req, res) => {
     try {
+        rollbar.warning('bots have been sent')
         res.status(200).send(botsArr)
     } catch (error) {
         console.log('ERROR GETTING BOTS', error)
@@ -25,6 +41,7 @@ app.get('/api/robots/five', (req, res) => {
         let compDuo = shuffled.slice(6, 8)
         res.status(200).send({choices, compDuo})
     } catch (error) {
+        rollbar.error('error')
         console.log('ERROR GETTING FIVE BOTS', error)
         res.sendStatus(400)
     }
@@ -56,6 +73,7 @@ app.post('/api/duel', (req, res) => {
             res.status(200).send('You won!')
         }
     } catch (error) {
+        rollbar.error('error')
         console.log('ERROR DUELING', error)
         res.sendStatus(400)
     }
@@ -63,6 +81,7 @@ app.post('/api/duel', (req, res) => {
 
 app.get('/api/player', (req, res) => {
     try {
+        rollbar.info('players record sent')
         res.status(200).send(playerRecord)
     } catch (error) {
         console.log('ERROR GETTING PLAYER STATS', error)
